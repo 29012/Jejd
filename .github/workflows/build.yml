@@ -14,10 +14,23 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Fix gradlew
+      - name: Fix gradlew and resources
         run: |
           curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.0.0/gradlew -o gradlew
           chmod +x gradlew
+          for d in mipmap-hdpi mipmap-mdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+            mkdir -p app/src/main/res/$d
+            convert -size 48x48 xc:#4CAF50 app/src/main/res/$d/ic_launcher.png 2>/dev/null || \
+            python3 -c "
+          import struct, zlib
+          def png(w,h,c):
+            def chunk(t,d): s=struct.pack('>I',len(d)); return s+t+d+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)
+            raw=b''.join(b'\x00'+bytes([c[0],c[1],c[2],255]*w) for _ in range(h))
+            return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',w,h,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b'')
+          open('app/src/main/res/$d/ic_launcher.png','wb').write(png(48,48,(76,175,80)))
+          open('app/src/main/res/$d/ic_launcher_round.png','wb').write(png(48,48,(76,175,80)))
+            "
+          done
 
       - name: Build APK
         run: ./gradlew assembleDebug
