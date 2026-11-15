@@ -1,11 +1,8 @@
 name: Build APK
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,14 +12,11 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-      - name: Grant execute permission
-        run: chmod +x gradlew
-      - name: Build debug APK
-        run: ./gradlew assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: gradle/gradle-build-action@v2
+      - run: chmod +x gradlew
+      - run: ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
         with:
-          name: cr-overlay-debug
+          name: CR-Overlay-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
